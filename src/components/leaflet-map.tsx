@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
+import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -27,9 +27,10 @@ function MapEvents() {
 interface Props {
   objects: ObjectResponse[];
   onMapReady: (map: L.Map) => void;
+  onMarkerPress: (id: number) => void;
 }
 
-export default function LeafletMap({ objects, onMapReady }: Props) {
+export default function LeafletMap({ objects, onMapReady, onMarkerPress }: Props) {
   const readyRef = useRef(false);
 
   const objectsWithCoords = objects.filter(
@@ -60,14 +61,10 @@ export default function LeafletMap({ objects, onMapReady }: Props) {
           key={obj.id}
           position={[obj.latitude!, obj.longitude!]}
           icon={buildingIcon}
-        >
-          <Popup>
-            <div style={{ fontFamily: 'system-ui, sans-serif' }}>
-              <strong>{obj.name}</strong>
-              {obj.address ? <p style={{ margin: '4px 0 0' }}>{obj.address}</p> : null}
-            </div>
-          </Popup>
-        </Marker>
+          eventHandlers={{
+            click: () => onMarkerPress(obj.id),
+          }}
+        />  
       ))}
     </MapContainer>
   );

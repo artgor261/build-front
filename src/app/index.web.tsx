@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 
 import { fetchObjects } from '@/api/client';
 import { ObjectResponse } from '@/api/types';
@@ -28,6 +29,7 @@ function MapFallback() {
 }
 
 export default function MapScreenWeb() {
+  const router = useRouter();
   const [objects, setObjects] = useState<ObjectResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,10 +59,14 @@ export default function MapScreenWeb() {
     mapRef?.flyTo(MOSCOW_CENTER, 12, { duration: 0.5 });
   }, []);
 
+  const handleMarkerPress = useCallback((id: number) => {
+    router.push(`/building/${id}`);
+  }, [router]);
+
   return (
     <View style={styles.container}>
       <Suspense fallback={<MapFallback />}>
-        <LeafletMap objects={objects} onMapReady={handleMapReady} />
+        <LeafletMap objects={objects} onMapReady={handleMapReady} onMarkerPress={handleMarkerPress} />
       </Suspense>
 
       <View style={styles.searchContainer}>

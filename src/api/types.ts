@@ -8,6 +8,7 @@ export interface ObjectResponse {
   style?: string;
   latitude?: number;
   longitude?: number;
+  image_base64?: string;
 }
 
 export interface RecognizeResponse {

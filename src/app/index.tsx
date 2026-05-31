@@ -1,4 +1,5 @@
 import { MaterialIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -24,6 +25,7 @@ const MOSCOW_REGION: Region = {
 
 export default function MapScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const mapRef = useRef<MapView>(null);
   const [objects, setObjects] = useState<ObjectResponse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,6 +74,7 @@ export default function MapScreen() {
             }}
             title={obj.name}
             description={obj.address}
+            onPress={() => router.push(`/building/${obj.id}`)}
           >
             <View style={styles.marker}>
               <MaterialIcons name="account-balance" size={14} color="#fff" />
