@@ -1,5 +1,5 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Platform,
@@ -9,22 +9,25 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import MapView, { Marker, Region } from 'react-native-maps';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { fetchObjects } from '@/api/client';
 import { ObjectResponse } from '@/api/types';
 
-const MOSCOW_REGION: Region = {
-  latitude: 55.7558,
-  longitude: 37.6173,
-  latitudeDelta: 0.08,
-  longitudeDelta: 0.04,
-};
+const LeafletMap = lazy(() => import('@/components/leaflet-map'));
 
-export default function MapScreen() {
-  const insets = useSafeAreaInsets();
-  const mapRef = useRef<MapView>(null);
+const MOSCOW_CENTER: [number, number] = [55.7558, 37.6173];
+
+let mapRef: { flyTo: (center: [number, number], zoom: number, opts?: Record<string, unknown>) => void } | null = null;
+
+function MapFallback() {
+  return (
+    <View style={styles.mapFallback}>
+      <ActivityIndicator size="large" color="#000" />
+    </View>
+  );
+}
+
+export default function MapScreenWeb() {
   const [objects, setObjects] = useState<ObjectResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,49 +49,23 @@ export default function MapScreen() {
     }
   }
 
-  const objectsWithCoords = objects.filter(
-    (obj) => obj.latitude != null && obj.longitude != null
-  );
+  const handleMapReady = useCallback((map: typeof mapRef) => {
+    mapRef = map;
+  }, []);
 
   const handleMyLocation = useCallback(() => {
-    mapRef.current?.animateToRegion(MOSCOW_REGION, 500);
+    mapRef?.flyTo(MOSCOW_CENTER, 12, { duration: 0.5 });
   }, []);
 
   return (
     <View style={styles.container}>
-      <MapView
-        ref={mapRef}
-        style={styles.map}
-        initialRegion={MOSCOW_REGION}
-        showsUserLocation={false}
-        showsMyLocationButton={false}
-      >
-        {objectsWithCoords.map((obj) => (
-          <Marker
-            key={obj.id}
-            coordinate={{
-              latitude: obj.latitude!,
-              longitude: obj.longitude!,
-            }}
-            title={obj.name}
-            description={obj.address}
-          >
-            <View style={styles.marker}>
-              <MaterialIcons name="account-balance" size={10} color="#fff" />
-            </View>
-          </Marker>
-        ))}
-      </MapView>
+      <Suspense fallback={<MapFallback />}>
+        <LeafletMap objects={objects} onMapReady={handleMapReady} />
+      </Suspense>
 
-      {/* Search Bar */}
-      <View style={[styles.searchContainer, { top: insets.top + 12 }]}>
+      <View style={styles.searchContainer}>
         <View style={styles.searchInner}>
-          <MaterialIcons
-            name="search"
-            size={18}
-            color="#999"
-            style={styles.searchIcon}
-          />
+          <MaterialIcons name="search" size={18} color="#999" style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search building"
@@ -101,8 +78,7 @@ export default function MapScreen() {
         </View>
       </View>
 
-      {/* Bottom Controls */}
-      <View style={[styles.bottomControls, { bottom: insets.bottom + 16 }]}>
+      <View style={styles.bottomControls}>
         <TouchableOpacity style={styles.smallButton}>
           <MaterialIcons name="sort" size={22} color="#000" />
         </TouchableOpacity>
@@ -116,17 +92,15 @@ export default function MapScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Loading */}
       {loading && (
-        <View style={styles.centerOverlay}>
+        <View style={styles.centerOverlay} pointerEvents="none">
           <ActivityIndicator size="large" color="#000" />
         </View>
       )}
 
-      {/* Error */}
       {error && (
-        <View style={styles.centerOverlay}>
-          <View style={styles.errorBox}>
+        <View style={styles.centerOverlay} pointerEvents="box-none">
+          <View style={styles.errorBox} pointerEvents="auto">
             <Text style={styles.errorText}>{error}</Text>
             <TouchableOpacity onPress={loadObjects} style={styles.retryButton}>
               <Text style={styles.retryText}>Retry</Text>
@@ -142,23 +116,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  map: {
+  mapFallback: {
     flex: 1,
-  },
-  marker: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: '#000',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#f0f0f0',
   },
   searchContainer: {
     position: 'absolute',
+    top: 12,
     left: 0,
     right: 0,
     alignItems: 'center',
-    paddingHorizontal: 24,
+    zIndex: 1000,
   },
   searchInner: {
     flexDirection: 'row',
@@ -177,8 +147,8 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: 4,
       },
-      android: {
-        elevation: 4,
+      default: {
+        boxShadow: '0 4px 4px rgba(0,0,0,0.25)',
       },
     }),
   },
@@ -188,7 +158,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    fontFamily: Platform.select({ ios: 'system-ui', default: 'normal' }),
+    fontFamily: Platform.select({ ios: 'system-ui', default: 'sans-serif' }),
     color: '#1E1E1E',
   },
   searchClear: {
@@ -196,12 +166,14 @@ const styles = StyleSheet.create({
   },
   bottomControls: {
     position: 'absolute',
+    bottom: 16,
     left: 0,
     right: 0,
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'flex-end',
     paddingHorizontal: 40,
+    zIndex: 1000,
   },
   smallButton: {
     width: 40,
@@ -217,8 +189,8 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.15,
         shadowRadius: 3,
       },
-      android: {
-        elevation: 3,
+      default: {
+        boxShadow: '0 2px 3px rgba(0,0,0,0.15)',
       },
     }),
   },
@@ -236,8 +208,8 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.3,
         shadowRadius: 5,
       },
-      android: {
-        elevation: 5,
+      default: {
+        boxShadow: '0 4px 5px rgba(0,0,0,0.3)',
       },
     }),
   },
@@ -245,6 +217,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFill,
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 2000,
   },
   errorBox: {
     backgroundColor: '#fff',
@@ -258,8 +231,8 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
       },
-      android: {
-        elevation: 4,
+      default: {
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
       },
     }),
   },
