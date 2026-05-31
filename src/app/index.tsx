@@ -74,7 +74,7 @@ export default function MapScreen() {
             description={obj.address}
           >
             <View style={styles.marker}>
-              <MaterialIcons name="account-balance" size={10} color="#fff" />
+              <MaterialIcons name="account-balance" size={14} color="#fff" />
             </View>
           </Marker>
         ))}
@@ -146,9 +146,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   marker: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: '#000',
     alignItems: 'center',
     justifyContent: 'center',

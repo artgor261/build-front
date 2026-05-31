@@ -8,11 +8,11 @@ import { ObjectResponse } from '@/api/types';
 
 const buildingIcon = L.divIcon({
   html:
-    '<div style="width:16px;height:16px;border-radius:50%;background:#000;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px">🏛</div>',
+    '<div style="width:24px;height:24px;border-radius:50%;background:#000;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px">🏛</div>',
   className: '',
-  iconSize: [16, 16],
-  iconAnchor: [8, 8],
-  popupAnchor: [0, -8],
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],
+  popupAnchor: [0, -12],
 });
 
 const MOSCOW_CENTER: L.LatLngTuple = [55.7558, 37.6173];
