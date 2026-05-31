@@ -1,12 +1,15 @@
 import { MaterialIcons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   Image,
+  Modal,
   Platform,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -25,7 +28,7 @@ export default function BuildingScreen() {
   const [building, setBuilding] = useState<ObjectResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [descriptionExpanded, setDescriptionExpanded] = useState(true);
+  const [fullscreen, setFullscreen] = useState(false);
 
   useEffect(() => {
     if (id) loadBuilding();
@@ -48,9 +51,10 @@ export default function BuildingScreen() {
     router.replace('/');
   }, [router]);
 
-  const handleCopyAddress = useCallback(() => {
-    if (building?.address) {
-      Alert.alert('Copied', 'Address copied to clipboard');
+  const handleCopyAddress = useCallback(async () => {
+    if (building?.name) {
+      await Clipboard.setStringAsync(building.name);
+      Alert.alert('Copied', 'Building name copied to clipboard');
     }
   }, [building]);
 
@@ -84,24 +88,17 @@ export default function BuildingScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Search / Close bar */}
-      <View style={[styles.searchBar, { top: insets.top + 12 }]} pointerEvents="box-none">
-        <View style={styles.searchInner} pointerEvents="auto">
-          <MaterialIcons name="search" size={18} color="#999" style={styles.searchIcon} />
-          <Text style={styles.searchPlaceholder}>Search building</Text>
-          <TouchableOpacity onPress={handleBack} style={styles.closeButton}>
-            <MaterialIcons name="close" size={16} color="#1E1E1E" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Photo */}
-        <View style={styles.photoContainer}>
+        <TouchableOpacity
+          style={styles.photoContainer}
+          activeOpacity={1}
+          onPress={() => photoUri && setFullscreen(true)}
+        >
           {photoUri ? (
             <Image
               source={{ uri: photoUri }}
@@ -116,7 +113,7 @@ export default function BuildingScreen() {
           <TouchableOpacity style={styles.backButton} onPress={handleBack}>
             <MaterialIcons name="arrow-back" size={22} color="#fff" />
           </TouchableOpacity>
-        </View>
+        </TouchableOpacity>
 
         {/* Name row */}
         <View style={styles.nameRow}>
@@ -129,11 +126,9 @@ export default function BuildingScreen() {
           </View>
           {/* Copy + Route icons */}
           <View style={styles.actionIcons}>
-            {building.address ? (
-              <TouchableOpacity style={styles.iconButton} onPress={handleCopyAddress}>
-                <MaterialIcons name="content-copy" size={14} color="#000" />
-              </TouchableOpacity>
-            ) : null}
+            <TouchableOpacity style={styles.iconButton} onPress={handleCopyAddress}>
+              <MaterialIcons name="content-copy" size={14} color="#000" />
+            </TouchableOpacity>
             <TouchableOpacity style={styles.iconButton}>
               <MaterialIcons name="directions" size={14} color="#000" />
             </TouchableOpacity>
@@ -161,25 +156,37 @@ export default function BuildingScreen() {
         {/* Description */}
         {building.description ? (
           <View style={styles.descriptionBox}>
-            <Text
-              style={styles.descriptionText}
-              numberOfLines={descriptionExpanded ? undefined : 3}
-            >
+            <Text style={styles.descriptionText}>
               {building.description}
             </Text>
-            <TouchableOpacity
-              style={styles.expandButton}
-              onPress={() => setDescriptionExpanded(!descriptionExpanded)}
-            >
-              <MaterialIcons
-                name={descriptionExpanded ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
-                size={18}
-                color="#666"
-              />
-            </TouchableOpacity>
           </View>
         ) : null}
       </ScrollView>
+
+      {/* Fullscreen photo */}
+      <Modal
+        visible={fullscreen}
+        transparent={false}
+        animationType="fade"
+        onRequestClose={() => setFullscreen(false)}
+      >
+        <View style={styles.fullscreenContainer}>
+          <StatusBar hidden />
+          <TouchableOpacity
+            style={styles.fullscreenClose}
+            onPress={() => setFullscreen(false)}
+          >
+            <MaterialIcons name="close" size={28} color="#fff" />
+          </TouchableOpacity>
+          {photoUri ? (
+            <Image
+              source={{ uri: photoUri }}
+              style={styles.fullscreenImage}
+              resizeMode="contain"
+            />
+          ) : null}
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -197,51 +204,9 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-  // Search bar
-  searchBar: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    zIndex: 10,
-    paddingHorizontal: 24,
-  },
-  searchInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#D9D9D9',
-    height: 49,
-    paddingHorizontal: 12,
-    width: 182,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-      },
-      default: {
-        boxShadow: '0 4px 4px rgba(0,0,0,0.25)',
-      },
-    }),
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchPlaceholder: {
-    flex: 1,
-    fontSize: 16,
-    color: '#999',
-  },
-  closeButton: {
-    padding: 2,
-  },
   // Photo
   photoContainer: {
-    height: 287,
+    height: 400,
     backgroundColor: '#E8E8E8',
     position: 'relative',
   },
@@ -334,13 +299,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#000',
     lineHeight: 22,
-    paddingRight: 20,
-  },
-  expandButton: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    padding: 4,
   },
   // Error / Retry
   errorText: {
@@ -359,5 +317,28 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',
+  },
+  // Fullscreen
+  fullscreenContainer: {
+    flex: 1,
+    backgroundColor: '#000',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fullscreenClose: {
+    position: 'absolute',
+    top: 52,
+    right: 20,
+    zIndex: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fullscreenImage: {
+    width: '100%',
+    height: '100%',
   },
 });

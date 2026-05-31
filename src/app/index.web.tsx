@@ -5,7 +5,6 @@ import {
   Platform,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -69,21 +68,6 @@ export default function MapScreenWeb() {
         <LeafletMap objects={objects} onMapReady={handleMapReady} onMarkerPress={handleMarkerPress} />
       </Suspense>
 
-      <View style={styles.searchContainer}>
-        <View style={styles.searchInner}>
-          <MaterialIcons name="search" size={18} color="#999" style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search building"
-            placeholderTextColor="#999"
-            editable={false}
-          />
-          <TouchableOpacity style={styles.searchClear}>
-            <MaterialIcons name="close" size={16} color="#1E1E1E" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
       <View style={styles.bottomControls}>
         <TouchableOpacity style={styles.smallButton}>
           <MaterialIcons name="sort" size={22} color="#000" />
@@ -127,48 +111,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#f0f0f0',
-  },
-  searchContainer: {
-    position: 'absolute',
-    top: 12,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    zIndex: 1000,
-  },
-  searchInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#D9D9D9',
-    height: 49,
-    paddingHorizontal: 12,
-    width: 182,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-      },
-      default: {
-        boxShadow: '0 4px 4px rgba(0,0,0,0.25)',
-      },
-    }),
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    fontFamily: Platform.select({ ios: 'system-ui', default: 'sans-serif' }),
-    color: '#1E1E1E',
-  },
-  searchClear: {
-    padding: 2,
   },
   bottomControls: {
     position: 'absolute',

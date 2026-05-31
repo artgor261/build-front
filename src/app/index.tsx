@@ -6,7 +6,6 @@ import {
   Platform,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -83,27 +82,6 @@ export default function MapScreen() {
         ))}
       </MapView>
 
-      {/* Search Bar */}
-      <View style={[styles.searchContainer, { top: insets.top + 12 }]}>
-        <View style={styles.searchInner}>
-          <MaterialIcons
-            name="search"
-            size={18}
-            color="#999"
-            style={styles.searchIcon}
-          />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search building"
-            placeholderTextColor="#999"
-            editable={false}
-          />
-          <TouchableOpacity style={styles.searchClear}>
-            <MaterialIcons name="close" size={16} color="#1E1E1E" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
       {/* Bottom Controls */}
       <View style={[styles.bottomControls, { bottom: insets.bottom + 16 }]}>
         <TouchableOpacity style={styles.smallButton}>
@@ -155,47 +133,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  searchContainer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    paddingHorizontal: 24,
-  },
-  searchInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#D9D9D9',
-    height: 49,
-    paddingHorizontal: 12,
-    width: 182,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    fontFamily: Platform.select({ ios: 'system-ui', default: 'normal' }),
-    color: '#1E1E1E',
-  },
-  searchClear: {
-    padding: 2,
   },
   bottomControls: {
     position: 'absolute',
