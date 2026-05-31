@@ -110,7 +110,7 @@ export default function MapScreen() {
           <MaterialIcons name="sort" size={22} color="#000" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.photoButton}>
+        <TouchableOpacity style={styles.photoButton} onPress={() => router.push({ pathname: '/camera' })}>
           <MaterialIcons name="photo-camera" size={32} color="#fff" />
         </TouchableOpacity>
 

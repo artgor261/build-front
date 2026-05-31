@@ -27,6 +27,22 @@ export async function recognizeImage(file: {
   type: string;
   fileName: string;
 }): Promise<RecognizeResponse> {
+  if (Platform.OS === 'web') {
+    const response = await fetch(file.uri);
+    const blob = await response.blob();
+    const formData = new FormData();
+    formData.append('file', blob, file.fileName);
+
+    const res = await fetch(`${BASE_URL}/recognize`, {
+      method: 'POST',
+      body: formData,
+    });
+    if (!res.ok) {
+      throw new Error(`Failed to recognize: ${res.status}`);
+    }
+    return res.json();
+  }
+
   const formData = new FormData();
   formData.append('file', {
     uri: file.uri,
@@ -34,12 +50,17 @@ export async function recognizeImage(file: {
     name: file.fileName,
   } as any);
 
-  const response = await fetch(`${BASE_URL}/recognize`, {
-    method: 'POST',
-    body: formData,
+  return new Promise<RecognizeResponse>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `${BASE_URL}/recognize`);
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(JSON.parse(xhr.responseText));
+      } else {
+        reject(new Error(`Failed to recognize: ${xhr.status}`));
+      }
+    };
+    xhr.onerror = () => reject(new Error('Network error'));
+    xhr.send(formData);
   });
-  if (!response.ok) {
-    throw new Error(`Failed to recognize: ${response.status}`);
-  }
-  return response.json();
 }
