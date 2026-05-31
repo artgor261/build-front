@@ -52,26 +52,6 @@ export default function CameraScreen() {
     }
   }, []);
 
-  const takePhoto = useCallback(async () => {
-    const permission = await ImagePicker.requestCameraPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert('Permission required', 'Please allow access to the camera.');
-      return;
-    }
-
-    const pickerResult = await ImagePicker.launchCameraAsync({
-      quality: 0.8,
-    });
-
-    if (!pickerResult.canceled && pickerResult.assets[0]) {
-      const asset = pickerResult.assets[0];
-      setPhotoUri(asset.uri);
-      setResult(null);
-      setError(null);
-      await recognize(asset.uri, asset.mimeType || 'image/jpeg', asset.fileName || 'photo.jpg');
-    }
-  }, []);
-
   async function recognize(uri: string, type: string, fileName: string) {
     try {
       setRecognizing(true);
@@ -119,10 +99,6 @@ export default function CameraScreen() {
 
         {/* Buttons */}
         <View style={styles.buttonsRow}>
-          <TouchableOpacity style={styles.actionButton} onPress={takePhoto}>
-            <MaterialIcons name="camera-alt" size={22} color="#fff" />
-            <Text style={styles.actionButtonText}>Camera</Text>
-          </TouchableOpacity>
           <TouchableOpacity style={styles.actionButton} onPress={pickFromGallery}>
             <MaterialIcons name="photo-library" size={22} color="#fff" />
             <Text style={styles.actionButtonText}>Gallery</Text>
